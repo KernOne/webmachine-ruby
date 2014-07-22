@@ -51,6 +51,13 @@ shared_examples_for :adapter_lint do
     end
   end
 
+  it "provides the request URI" do
+    request = Net::HTTP::Get.new("/test")
+    request["Accept"] = "test/response.request_uri"
+    response = client.request(request)
+    expect(response.body).to eq("http://#{address}:#{port}/test")
+  end
+
   it "provides a string-like request body" do
     request = Net::HTTP::Put.new("/test")
     request.body = "Hello, World!"
