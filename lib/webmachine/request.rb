@@ -173,6 +173,7 @@ module Webmachine
       host, _, port = headers.fetch("Host", "").rpartition(":")
       return uri if host.empty?
 
+      host = "[#{host}]" if host.include?(":")
       port = 80 if port.empty?
 
       uri.scheme = "http"
