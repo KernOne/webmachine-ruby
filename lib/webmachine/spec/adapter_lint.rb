@@ -4,34 +4,51 @@ require "net/http"
 shared_examples_for :adapter_lint do
   attr_accessor :client
 
-  before(:all) do
+  let(:address) { "127.0.0.1" }
+  let(:port) { s = TCPServer.new(address, 0); p = s.addr[1]; s.close; p }
+
+  let(:application) do
     application = Webmachine::Application.new
-    server = TCPServer.new('0.0.0.0', 0)
-    application.configuration.port = server.addr[1]
-    server.close
     application.dispatcher.add_route ["test"], Test::Resource
 
-    @adapter = described_class.new(application)
-    @client = Net::HTTP.new(application.configuration.ip, application.configuration.port)
+    application.configure do |c|
+      c.ip = address
+      c.port = port
+    end
 
-    Thread.abort_on_exception = true
-    @server_thread = Thread.new { @adapter.run }
+    application
+  end
 
+  let(:client) do
+    client = Net::HTTP.new(application.configuration.ip, port)
     # Wait until the server is responsive
     timeout(5) do
       begin
         client.start
       rescue Errno::ECONNREFUSED
-        sleep(0.1)
+        sleep(0.01)
         retry
       end
     end
+    client
   end
 
-  after(:all) do
+  before do
+    @adapter = described_class.new(application)
+
+    Thread.abort_on_exception = true
+    @server_thread = Thread.new { @adapter.run }
+  end
+
+  after do
     @adapter.shutdown
-    @client.finish
-    @server_thread.join
+    client.finish
+    begin
+      # The webrick and rack adapters take extremely long to shutdown
+      timeout(0.01) { @server_thread.join }
+    rescue Timeout::Error
+      @server_thread.kill
+    end
   end
 
   it "provides a string-like request body" do
