@@ -38,6 +38,7 @@ shared_examples_for :adapter_lint do
 
     Thread.abort_on_exception = true
     @server_thread = Thread.new { @adapter.run }
+    sleep(0.01)
   end
 
   after do
@@ -63,7 +64,7 @@ shared_examples_for :adapter_lint do
 
     it "provides the IPv6 request URI" do
       # TODO: Remove guard when fixed: https://bugs.ruby-lang.org/issues/9129
-      pending("Net::HTTP regression in Ruby 2.x") if RUBY_VERSION.start_with?('2.')
+      skip "Net::HTTP regression in Ruby 2.x" if RUBY_VERSION.start_with?('2.')
 
       request = Net::HTTP::Get.new("/test")
       request["Accept"] = "test/response.request_uri"
