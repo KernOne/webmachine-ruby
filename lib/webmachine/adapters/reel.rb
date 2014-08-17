@@ -28,9 +28,9 @@ module Webmachine
           unless @options[:ssl][:cert] && @options[:ssl][:key]
             raise ArgumentError, 'Certificate or Private key missing for HTTPS Server'
           end
-          @server = ::Reel::Server::HTTPS.supervise(@options[:host], @options[:port], @options[:ssl], &method(:process))
+          @server = ::Reel::Server::HTTPS.supervise(@options[:host], &method(:process))
         else
-          @server = ::Reel::Server::HTTP.supervise(@options[:host], @options[:port], &method(:process))
+          @server = ::Reel::Server::HTTP.supervise(@options[:host], &method(:process))
         end
 
         # FIXME: this will no longer work on Ruby 2.0. We need Celluloid.trap
